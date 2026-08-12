@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend (typecheck + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+  database:
+    name: Database (migrations + seed + tests)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: emptybag
+          POSTGRES_PASSWORD: emptybag_dev
+          POSTGRES_DB: emptybag_ims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U emptybag"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install pgTAP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-15-pgtap
+        env:
+          DEBIAN_FRONTEND: noninteractive
+      - name: Setup database
+        env:
+          DATABASE_URL: postgres://emptybag:emptybag_dev@localhost:5432/emptybag_ims
+        run: |
+          npm ci
+          node scripts/db.js setup
+      - name: Run database tests
+        env:
+          DATABASE_URL: postgres://emptybag:emptybag_dev@localhost:5432/emptybag_ims
+        run: node scripts/db.js test

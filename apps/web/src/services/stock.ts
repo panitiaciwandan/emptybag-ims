@@ -55,7 +55,7 @@ export async function getItems(): Promise<Item[]> {
 }
 
 export async function getActiveShift(): Promise<ShiftInfo> {
-  const { data, error } = await supabase.rpc('get_active_shift', { ts: new Date().toISOString() })
+  const { data, error } = await supabase.rpc('get_active_shift', { p_ts: new Date().toISOString() })
   if (error) throw error
   return data as ShiftInfo
 }
