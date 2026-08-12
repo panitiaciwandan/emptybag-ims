@@ -50,7 +50,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
       - name: Install pgTAP inside Postgres container
         run: |
-          CONTAINER=$(docker ps -q --filter "label=com.github.actions.service=postgres")
+          CONTAINER=$(docker ps -q --filter "ancestor=postgres:15" | head -n1)
           docker exec "$CONTAINER" apt-get update
           docker exec "$CONTAINER" apt-get install -y postgresql-15-pgtap
         env:
