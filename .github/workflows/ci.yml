@@ -42,10 +42,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install pgTAP
+      - name: Install postgresql client (psql)
         run: |
           sudo apt-get update
-          sudo apt-get install -y postgresql-15-pgtap
+          sudo apt-get install -y postgresql-client
+        env:
+          DEBIAN_FRONTEND: noninteractive
+      - name: Install pgTAP inside Postgres container
+        run: |
+          CONTAINER=$(docker ps -q --filter "label=com.github.actions.service=postgres")
+          docker exec "$CONTAINER" apt-get update
+          docker exec "$CONTAINER" apt-get install -y postgresql-15-pgtap
         env:
           DEBIAN_FRONTEND: noninteractive
       - name: Setup database
